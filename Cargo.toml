@@ -1,0 +1,54 @@
+[package]
+name = "serve"
+version = "1.0.0"
+edition = "2021"
+description = "Serveur HTTP de fichiers ultra-rapide en Rust — un remplaçant moderne de `python -m http.server`"
+license = "MIT"
+
+[[bin]]
+name = "serve"
+path = "src/main.rs"
+
+[dependencies]
+# Runtime async
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
+futures = "0.3"
+bytes = "1"
+
+# Serveur HTTP
+axum = { version = "0.8", features = ["multipart", "macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["compression-gzip", "compression-br", "cors"] }
+http = "1"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Sérialisation
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Divers
+mime_guess = "2"
+qrcode = "0.14"
+owo-colors = "4"
+chrono = "0.4"
+percent-encoding = "2"
+indicatif = "0.17"
+local-ip-address = "0.6"
+base64 = "0.22"
+
+# Zip streaming à la volée
+async_zip = { version = "0.0.17", features = ["deflate", "tokio"] }
+
+# Gestion d'erreurs
+anyhow = "1"
+thiserror = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+strip = true
+panic = "abort"
