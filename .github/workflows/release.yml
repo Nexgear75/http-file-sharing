@@ -40,26 +40,29 @@ jobs:
       - name: Compiler en release
         run: cargo build --release --target ${{ matrix.target }}
 
+      # Le nom de l'asset contient le « target triple » (ex. aarch64-apple-darwin)
+      # pour que `self_update` sélectionne automatiquement le bon fichier, et le
+      # binaire est placé à la racine de l'archive pour qu'il soit trouvé.
       - name: Empaqueter (macOS / Linux)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
-          dir="serve-${{ github.ref_name }}-${{ matrix.name }}"
+          dir="serve-${{ github.ref_name }}-${{ matrix.target }}"
           mkdir "$dir"
           cp "target/${{ matrix.target }}/release/serve" "$dir/"
           cp README.md LICENSE "$dir/"
-          tar -czf "$dir.tar.gz" "$dir"
+          tar -C "$dir" -czf "$dir.tar.gz" .
           echo "ASSET=$dir.tar.gz" >> "$GITHUB_ENV"
 
       - name: Empaqueter (Windows)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          dir="serve-${{ github.ref_name }}-${{ matrix.name }}"
+          dir="serve-${{ github.ref_name }}-${{ matrix.target }}"
           mkdir "$dir"
           cp "target/${{ matrix.target }}/release/serve.exe" "$dir/"
           cp README.md LICENSE "$dir/"
-          7z a "$dir.zip" "$dir"
+          ( cd "$dir" && 7z a "../$dir.zip" . )
           echo "ASSET=$dir.zip" >> "$GITHUB_ENV"
 
       - name: Publier sur la Release GitHub
