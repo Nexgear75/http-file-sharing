@@ -94,6 +94,22 @@ pub async fn run(args: Args) -> Result<()> {
         open_browser(&local_url);
     }
 
+    // Vérification de mise à jour discrète, en tâche de fond (non bloquante).
+    if !args.no_update_check {
+        tokio::spawn(async {
+            if let Ok(Some(version)) = tokio::task::spawn_blocking(crate::update::check_newer).await
+            {
+                println!(
+                    "\n{}",
+                    format!(
+                        "🔔 serve v{version} est disponible — lance `serve update` pour mettre à jour"
+                    )
+                    .bright_yellow()
+                );
+            }
+        });
+    }
+
     // Construction du routeur.
     let app = build_router(state);
 

@@ -13,15 +13,27 @@ mod progress;
 mod server;
 mod state;
 mod template;
+mod update;
 
 use std::process::ExitCode;
 
 use clap::Parser;
 
-use crate::cli::Args;
+use crate::cli::{Args, Command};
 
 fn main() -> ExitCode {
     let args = Args::parse();
+
+    // Sous-commande `update` : traitée avant de démarrer un runtime/serveur.
+    if let Some(Command::Update { check }) = args.command {
+        return match update::run_update(check) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("Erreur de mise à jour : {e:#}");
+                ExitCode::FAILURE
+            }
+        };
+    }
 
     // Runtime tokio multi-thread.
     let runtime = match tokio::runtime::Builder::new_multi_thread()

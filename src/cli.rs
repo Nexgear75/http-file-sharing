@@ -16,9 +16,16 @@ use qrcode::QrCode;
     name = "serve",
     version,
     about = "📁 Serve — Serveur HTTP de fichiers moderne en Rust 🦀",
-    long_about = None
+    long_about = None,
+    args_conflicts_with_subcommands = true,
+    subcommand_negates_reqs = true
 )]
 pub struct Args {
+    /// Sous-commande optionnelle (ex. `serve update`). Sans sous-commande, le
+    /// serveur démarre normalement.
+    #[command(subcommand)]
+    pub command: Option<Command>,
+
     /// Répertoire à servir.
     #[arg(default_value = ".")]
     pub directory: PathBuf,
@@ -66,6 +73,21 @@ pub struct Args {
     /// Taille maximale d'upload en Mo.
     #[arg(long, default_value_t = 100)]
     pub max_upload_mb: u64,
+
+    /// Désactiver la vérification de mise à jour au démarrage.
+    #[arg(long)]
+    pub no_update_check: bool,
+}
+
+/// Sous-commandes de `serve`.
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum Command {
+    /// Mettre à jour serve vers la dernière version publiée sur GitHub.
+    Update {
+        /// Vérifier seulement la disponibilité d'une mise à jour, sans l'installer.
+        #[arg(long)]
+        check: bool,
+    },
 }
 
 impl Args {
