@@ -37,6 +37,19 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
+      # Le tag Git est la seule source de vérité pour la version : on la réinjecte
+      # dans Cargo.toml avant de compiler. Ainsi le binaire rapporte toujours la
+      # même version que la release, ce qui évite toute désynchronisation (bannière
+      # et vérification de mise à jour restent exactes).
+      - name: Synchroniser la version sur le tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Version dérivée du tag : $VERSION"
+          awk -v v="$VERSION" '!done && /^version = /{print "version = \"" v "\""; done=1; next} {print}' Cargo.toml > Cargo.toml.new
+          mv Cargo.toml.new Cargo.toml
+          grep '^version' Cargo.toml
+
       - name: Compiler en release
         run: cargo build --release --target ${{ matrix.target }}
 

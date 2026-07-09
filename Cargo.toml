@@ -1,6 +1,6 @@
 [package]
 name = "serve"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Serveur HTTP de fichiers ultra-rapide en Rust — un remplaçant moderne de `python -m http.server`"
 license = "MIT"

@@ -161,30 +161,29 @@ pub fn print_banner(info: &BannerInfo<'_>) {
     println!();
 }
 
-/// Affiche la section encadrée « 📡 Depuis un autre appareil ».
+/// Affiche la section « 📡 Depuis un autre appareil » avec une barre d'accent
+/// verticale à gauche (pas de cadre fermé : le QR code est plus large qu'une
+/// boîte à largeur fixe, une barre d'accent reste nette quel que soit le contenu).
 fn print_remote_section(info: &BannerInfo<'_>) {
-    let border = "─".repeat(56);
-    println!("  {}", format!("┌─ 📡 Depuis un autre appareil {}┐", "─".repeat(26)).bright_yellow());
-    println!(
-        "  {}  {}",
-        "│".bright_yellow(),
-        "Ouvre ce lien sur l'autre machine ou scanne le QR :".bright_white()
-    );
-    println!("  {}", format!("│{}│", " ".repeat(56)).bright_yellow());
+    // Petit utilitaire : préfixe chaque ligne d'une barre jaune.
+    macro_rules! bar {
+        ()        => { println!("  {}", "│".bright_yellow()) };
+        ($($a:tt)+) => { println!("  {}  {}", "│".bright_yellow(), format!($($a)+)) };
+    }
+
+    bar!("{}", "📡 Depuis un autre appareil".bold().bright_yellow());
+    bar!("{}", "Ouvre ce lien sur l'autre machine ou scanne le QR :".bright_white());
+    bar!();
 
     if info.network_ips.is_empty() {
-        println!(
-            "  {}  {}",
-            "│".bright_yellow(),
-            "(aucune interface réseau détectée — utilise localhost)".dimmed()
-        );
+        bar!("{}", "(aucune interface réseau détectée — utilise localhost)".dimmed());
     } else {
         for ip in info.network_ips {
             let url = format!("{}://{}:{}", info.scheme, ip, info.port);
-            println!("  {}  ▸  {}", "│".bright_yellow(), url.bright_green().bold());
+            bar!("▸  {}", url.bright_green().bold());
         }
     }
-    println!("  {}", format!("│{}│", " ".repeat(56)).bright_yellow());
+    bar!();
 
     // QR code pour la première IP réseau (ou localhost en dernier recours).
     let qr_target = info
@@ -196,20 +195,13 @@ fn print_remote_section(info: &BannerInfo<'_>) {
     match render_qr(&qr_target) {
         Ok(qr) => {
             for line in qr.lines() {
-                println!("  {}   {}", "│".bright_yellow(), line);
+                bar!(" {}", line);
             }
         }
-        Err(_) => {
-            println!(
-                "  {}  {}",
-                "│".bright_yellow(),
-                "(QR code indisponible)".dimmed()
-            );
-        }
+        Err(_) => bar!("{}", "(QR code indisponible)".dimmed()),
     }
-    println!("  {}", format!("│  {}  scanne pour ouvrir{}│", "▲".dimmed(), " ".repeat(33)).bright_yellow());
-    println!("  {}", format!("└{}┘", "─".repeat(56)).bright_yellow());
-    let _ = border;
+    bar!("{}  {}", "▲".dimmed(), "scanne pour ouvrir".dimmed());
+    bar!();
 }
 
 /// Génère un QR code ASCII (blocs unicode) pour l'URL donnée.
